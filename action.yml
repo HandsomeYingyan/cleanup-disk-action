@@ -1,0 +1,31 @@
+name: "Cleanup Disk"
+description: "Delete pre-installed sofeware in github action."
+author: "curoky"
+branding:
+  icon: "trash-2"
+  color: "gray-dark"
+inputs:
+  retain:
+    description: retain some packages.
+    required: false
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - name: install dependency
+      shell: bash
+      run: |
+        sudo apt-get install python3-setuptools
+        python3 -m pip install --user -r requirements.txt
+
+    - name: stats info
+      shell: bash
+      run: >
+        python3 src/meta-info.py --clean=1
+        --meta_path=src/meta/ubuntu-meta.json
+        --result_path=ubuntu-meta.txt
+        --retain_list=${{ inputs.retain }}
+
+    - name: cleanup disk
+      shell: bash
+      run: grep -Po "\[[\w/]*\]" ubuntu-meta.txt | sed 's/\[//g;s/\]//g' | xargs sudo rm -rf --
