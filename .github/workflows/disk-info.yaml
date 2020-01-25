@@ -1,0 +1,44 @@
+name: disk info
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  # push:
+
+jobs:
+  disk_info:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-16.04
+          - ubuntu-18.04
+          - ubuntu-20.04
+          - ubuntu-latest
+          - macos-10.15
+          - macos-latest
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: install ncdu
+        run: |
+          wget https://dev.yorhel.nl/download/ncdu-1.15.1.tar.gz
+          tar -xzvf ncdu-1.15.1.tar.gz && cd ncdu-1.15.1
+          ./configure
+          make && sudo make install
+
+      - name: df info
+        run: df -h > df.txt
+
+      - name: ncdu info
+        run: >
+          ncdu
+          --exclude "/System/Volumes"
+          -o ncdu.json /
+
+      - name: upload disk info
+        uses: actions/upload-artifact@v2
+        with:
+          name: diskInfo
+          path: |
+            df.txt
+            ncdu.json
