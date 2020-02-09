@@ -130,11 +130,9 @@ The following installation packages will be removed, except for python/node.
     "8.8.3": ["/opt/ghc/8.8.3"],
     "8.10.1": ["/opt/ghc/8.10.1"]
   },
-  "snap": {
-    "default": ["/snap", "/var/lib/snap"]
-  },
   "linuxbrew": {
     "default": ["/home/linuxbrew"]
   }
 }
+
 ```

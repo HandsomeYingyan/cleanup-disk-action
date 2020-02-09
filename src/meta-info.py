@@ -93,7 +93,7 @@ def main(_):
     with codecs.open(FLAGS.meta_path, 'r', 'utf-8') as f:
         content = f.read()
 
-    FLAGS.retain_list = FLAGS.retain_list or ["python", "node", "snap"]
+    FLAGS.retain_list = FLAGS.retain_list or ["python", "node"]
 
     try:
         meta = json.loads(content)
