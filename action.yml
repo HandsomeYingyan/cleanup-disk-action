@@ -16,16 +16,16 @@ runs:
       shell: bash
       run: |
         sudo apt-get install python3-setuptools
-        python3 -m pip install --user -r requirements.txt
+        python3 -m pip install --user -r ${{ github.action_path }}/requirements.txt
 
     - name: stats info
       shell: bash
       run: >
-        python3 src/meta-info.py --clean=1
-        --meta_path=src/meta/ubuntu-meta.json
-        --result_path=ubuntu-meta.txt
+        python3 ${{ github.action_path }}/src/meta-info.py --clean=1
+        --meta_path=${{ github.action_path }}/src/meta/ubuntu-meta.json
+        --result_path=${{ github.action_path }}/ubuntu-meta.txt
         --retain_list=${{ inputs.retain }}
 
     - name: cleanup disk
       shell: bash
-      run: grep -Po "\[[\w/]*\]" ubuntu-meta.txt | sed 's/\[//g;s/\]//g' | xargs sudo rm -rf --
+      run: grep -Po "\[[\w/]*\]" ${{ github.action_path }}/ubuntu-meta.txt | sed 's/\[//g;s/\]//g' | xargs sudo rm -rf --
