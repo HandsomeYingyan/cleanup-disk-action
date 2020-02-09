@@ -1,0 +1,29 @@
+name: check effect
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  push:
+
+jobs:
+  check_effect:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-16.04
+          - ubuntu-18.04
+          - ubuntu-20.04
+          - ubuntu-latest
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: before clean
+        run: df -h
+
+      - name: clean disk
+        uses: ./
+
+      - name: after clean
+        run: df -h
