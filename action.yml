@@ -1,16 +1,16 @@
-name: "Cleanup Disk"
-description: "Delete pre-installed sofeware in github action."
-author: "curoky"
+name: 'Cleanup Disk'
+description: 'Delete pre-installed sofeware in github action.'
+author: 'curoky'
 branding:
-  icon: "trash-2"
-  color: "gray-dark"
+  icon: 'trash-2'
+  color: 'gray-dark'
 inputs:
   retain:
     description: retain some packages.
     required: false
-    default: ""
+    default: ''
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: install dependency
       shell: bash

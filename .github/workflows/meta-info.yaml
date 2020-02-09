@@ -2,7 +2,7 @@ name: meta info
 
 on:
   schedule:
-    - cron: "0 0 * * 0"
+    - cron: '0 0 * * 0'
   # push:
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
 
       - uses: actions/setup-python@v2
         with:
-          python-version: "3.8"
+          python-version: '3.8'
 
       - name: install dependency
         run: |

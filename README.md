@@ -41,7 +41,7 @@ steps:
   - name: Cleanup Disk
     uses: curoky/cleanup-disk-action@v1.0
     with:
-      retain: "python,node,ruby"
+      retain: 'python,node,ruby'
 ```
 
 ## Which packages were removed
@@ -134,5 +134,4 @@ The following installation packages will be removed, except for python/node.
     "default": ["/home/linuxbrew"]
   }
 }
-
 ```
