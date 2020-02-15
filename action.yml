@@ -6,13 +6,17 @@ branding:
   color: 'gray-dark'
 inputs:
   retain:
-    description: retain some packages.
+    description: Retain some packages.
     required: false
-    default: ''
-  show_stat:
-    description: show cleanup stat
+    default: 'python,node'
+  count_deleted_size:
+    description: Calculate the size of the cleanup.
     required: false
-    default: "true"
+    default: 'false'
+  verbose:
+    description: Show additional details.
+    required: false
+    default: 'true'
 
 runs:
   using: 'composite'
@@ -20,18 +24,11 @@ runs:
     - name: install dependency
       shell: bash
       run: |
-        sudo apt-get install python3-setuptools
-        python3 -m pip install --user -r ${{ github.action_path }}/requirements.txt
+        sudo python3 -m pip install -r ${{ github.action_path }}/requirements.txt
 
     - name: stat info
       shell: bash
       run: >
-        python3 ${{ github.action_path }}/src/meta-info.py --clean=1
-        --meta_path=${{ github.action_path }}/src/meta/ubuntu-meta.json
-        --result_path=${{ github.action_path }}/ubuntu-meta.txt
-        --retain_list=${{ inputs.retain }}
-        --show_stat=${{ inputs.show_stat }}
-
-    - name: cleanup disk
-      shell: bash
-      run: grep -Po "\[[\w/]*\]" ${{ github.action_path }}/ubuntu-meta.txt | sed 's/\[//g;s/\]//g' | xargs sudo rm -rf --
+        sudo ${{ github.action_path }}/src/meta-info.py
+        --dry_run=0 --count_deleted_size=1
+        --retain=${{ inputs.retain }}

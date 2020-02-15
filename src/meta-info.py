@@ -13,34 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# -----------------------------------------------------------------------------
-# @file: meta-info.py
-# -----------------------------------------------------------------------------
-
-# Usage:
-#   1. show meta info
-#      ./meta-info.py --meta_path=meta.json --result_path=meta.txt
-#   2. clean with meta
-#      ./meta-info.py --meta_path=meta.json --result_path=meta.txt \
-#           --clean=1 --retain_list="go,py"
 
 import os
-import json
 import codecs
 import shutil
 import multiprocessing
-from absl import app
-from absl import flags
-from absl import logging
+from typing import Set
+from absl import app, flags
 from functools import partial
 from anytree import Node, RenderTree
+from prettytable import PrettyTable
 
 FLAGS = flags.FLAGS
-flags.DEFINE_string("meta_path", None, "path to meta file.")
-flags.mark_flag_as_required("meta_path")
 
-flags.DEFINE_string("result_path", None, "path to result file.")
-flags.mark_flag_as_required("result_path")
+flags.DEFINE_list("retain", ["python", "node"], "Retain some packages.")
+flags.DEFINE_bool("dry_run", True, "Show effect only without removing.")
+flags.DEFINE_bool("count_deleted_size", True, "Calculate the size of the cleanup.")
+flags.DEFINE_bool("verbose", True, "Show additional details.")
 
 meta_data = {
     "go": {
@@ -140,78 +129,84 @@ meta_data = {
 }
 
 
-def getPathSize(start_path):
+def getPathSize(root_path: str) -> int:
     # ref: https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python
     total_size = 0
-    if os.path.isfile(start_path):
-        total_size = os.path.getsize(start_path)
+    if os.path.isfile(root_path):
+        total_size = os.path.getsize(root_path)
     else:
-        for dirpath, _, filenames in os.walk(start_path, followlinks=False):
+        for dirpath, _, filenames in os.walk(root_path, followlinks=False):
             for f in filenames:
                 fp = os.path.join(dirpath, f)
                 # skip if it is symbolic link
-                if not os.path.islink(fp):
-                    total_size += os.path.getsize(fp)
+                if os.path.islink(fp):
+                    continue
+                total_size += os.path.getsize(fp)
     total_size = total_size // 1024 // 1024
     return total_size
 
 
-def collectPathInfo(ingore_list, clean, data):
+def collectPathInfo(retain_list: Set[str], dry_run: bool, count_deleted_size: bool, data):
     name, versions = data
-    n_name = Node(name)
+    node = Node(name)
 
-    if name in ingore_list and clean:
-        n_name.name = f"{n_name.name} (ignored)"
-        return n_name
+    if name in retain_list:
+        node.name = f"{node.name} (ignored)"
 
     all_size = 0
-    for vid, paths in versions.items():
-        n_vid = Node(vid, parent=n_name)
+    for version, paths in versions.items():
+        vnode = Node(version, parent=node)
 
-        vid_size = 0
+        version_size = 0
         for p in paths:
-            if os.path.isfile(p) or os.path.isdir(p):
-                file_size = getPathSize(p) if FLAGS.show_stat else 0
-                vid_size += file_size
-                file_size = f"{file_size}Mb"
-            else:
-                file_size = "--- not found"
+            if not os.path.isfile(p) and not os.path.isdir(p):
+                pnode = Node(f"[{p}] -- (Not found)", parent=vnode)
+                continue
 
-            n_path = Node(f"{file_size} [{p}]", parent=n_vid)
-        n_vid.name = f"{n_vid.name} ({vid_size}Mb)"
-        all_size += vid_size
-    n_name.name = f"{n_name.name} ({all_size}Mb)"
-    return n_name
+            suffix = ""
+            if count_deleted_size:
+                file_size = getPathSize(p)
+                version_size += file_size
+                suffix += f"[{file_size}Mb]"
+
+            if not dry_run:
+                shutil.rmtree(p)
+
+            pnode = Node(f"[{p}] -- {suffix}", parent=vnode)
+
+        vnode.name = f"{vnode.name}"
+        if count_deleted_size:
+            vnode.name += f" ({version_size}Mb)"
+
+        all_size += version_size
+    node.name = f"{node.name} ({all_size}Mb)"
+    return node
 
 
 def main(_):
-    if not os.path.isfile(FLAGS.meta_path):
-        logging.fatal(f"file {FLAGS.meta_path} not exits")
-
-    with codecs.open(FLAGS.meta_path, 'r', 'utf-8') as f:
-        content = f.read()
-
-    FLAGS.retain_list = FLAGS.retain_list or ["python", "node"]
-
-    try:
-        meta = json.loads(content)
-        logging.info(f"meta size: {len(meta)}", )
-    except Exception as e:
-        logging.fatal(f"load file {FLAGS.meta_path} failed {e}")
+    x = PrettyTable()
+    x.field_names = ["key", "value"]
+    x.align["key"] = "l"
+    x.align["value"] = "r"
+    x.add_rows([
+        ["FLAGS.retain", FLAGS.retain],
+        ["FLAGS.dry_run", FLAGS.dry_run],
+        ["FLAGS.verbose", FLAGS.verbose],
+        ["FLAGS.count_deleted_size", FLAGS.count_deleted_size],
+    ])
+    print(x)
 
     with multiprocessing.Pool(processes=4) as pool:
-        func = partial(collectPathInfo, FLAGS.retain_list, FLAGS.clean)
-        results = pool.map(func, meta.items())
+        func = partial(collectPathInfo, set(FLAGS.retain), FLAGS.dry_run, FLAGS.count_deleted_size)
+        results = pool.map(func, meta_data.items())
 
     n_root = Node("root")
-    with codecs.open(FLAGS.result_path, 'w', 'utf-8') as f:
-        for r in results:
-            r.parent = n_root
-        if FLAGS.show_stat:
-            print(RenderTree(n_root).by_attr())
-        print(RenderTree(n_root).by_attr(), file=f)
+    for r in results:
+        r.parent = n_root
+
+    if FLAGS.verbose:
+        print(RenderTree(n_root).by_attr())
 
 
 if __name__ == '__main__':
-    logging.set_verbosity(logging.INFO)
     app.run(main)
