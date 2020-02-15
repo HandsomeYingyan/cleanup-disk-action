@@ -15,23 +15,11 @@
 #
 
 import os
+import sys
+import jinja2
 import codecs
-import shutil
-import multiprocessing
-from typing import Set
-from absl import app, flags
-from functools import partial
-from anytree import Node, RenderTree
-from prettytable import PrettyTable
 
-FLAGS = flags.FLAGS
-
-flags.DEFINE_list("retain", ["python", "node"], "Retain some packages.")
-flags.DEFINE_bool("dry_run", True, "Show effect only without removing.")
-flags.DEFINE_bool("count_deleted_size", True, "Calculate the size of the cleanup.")
-flags.DEFINE_bool("verbose", True, "Show additional details.")
-
-meta_data = {
+packages = {
     "go": {
         "default": ["/opt/hostedtoolcache/go"]
     },
@@ -129,84 +117,19 @@ meta_data = {
 }
 
 
-def getPathSize(root_path: str) -> int:
-    # ref: https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python
-    total_size = 0
-    if os.path.isfile(root_path):
-        total_size = os.path.getsize(root_path)
-    else:
-        for dirpath, _, filenames in os.walk(root_path, followlinks=False):
-            for f in filenames:
-                fp = os.path.join(dirpath, f)
-                # skip if it is symbolic link
-                if os.path.islink(fp):
-                    continue
-                total_size += os.path.getsize(fp)
-    total_size = total_size // 1024 // 1024
-    return total_size
+def main():
+    env = jinja2.Environment(trim_blocks=True,
+                             lstrip_blocks=True,
+                             loader=jinja2.FileSystemLoader(os.path.dirname(__file__)))
+    template = env.get_template('action.yaml.j2')
+
+    output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../action.yml'))
+    with codecs.open(output_path, 'w', 'utf8') as f:
+        f.write(template.render(packages=packages))
+    for k in packages.keys():
+        print(f'- {k}')
+    return 0
 
 
-def collectPathInfo(retain_list: Set[str], dry_run: bool, count_deleted_size: bool, data):
-    name, versions = data
-    node = Node(name)
-
-    if name in retain_list:
-        node.name = f"{node.name} (ignored)"
-
-    all_size = 0
-    for version, paths in versions.items():
-        vnode = Node(version, parent=node)
-
-        version_size = 0
-        for p in paths:
-            if not os.path.isfile(p) and not os.path.isdir(p):
-                pnode = Node(f"[{p}] -- (Not found)", parent=vnode)
-                continue
-
-            suffix = ""
-            if count_deleted_size:
-                file_size = getPathSize(p)
-                version_size += file_size
-                suffix += f"[{file_size}Mb]"
-
-            if not dry_run:
-                shutil.rmtree(p)
-
-            pnode = Node(f"[{p}] -- {suffix}", parent=vnode)
-
-        vnode.name = f"{vnode.name}"
-        if count_deleted_size:
-            vnode.name += f" ({version_size}Mb)"
-
-        all_size += version_size
-    node.name = f"{node.name} ({all_size}Mb)"
-    return node
-
-
-def main(_):
-    x = PrettyTable()
-    x.field_names = ["key", "value"]
-    x.align["key"] = "l"
-    x.align["value"] = "r"
-    x.add_rows([
-        ["FLAGS.retain", FLAGS.retain],
-        ["FLAGS.dry_run", FLAGS.dry_run],
-        ["FLAGS.verbose", FLAGS.verbose],
-        ["FLAGS.count_deleted_size", FLAGS.count_deleted_size],
-    ])
-    print(x)
-
-    with multiprocessing.Pool(processes=4) as pool:
-        func = partial(collectPathInfo, set(FLAGS.retain), FLAGS.dry_run, FLAGS.count_deleted_size)
-        results = pool.map(func, meta_data.items())
-
-    n_root = Node("root")
-    for r in results:
-        r.parent = n_root
-
-    if FLAGS.verbose:
-        print(RenderTree(n_root).by_attr())
-
-
-if __name__ == '__main__':
-    app.run(main)
+if __name__ == "__main__":
+    sys.exit(main())

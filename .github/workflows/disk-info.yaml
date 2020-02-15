@@ -8,13 +8,14 @@ on:
 jobs:
   disk_info:
     strategy:
+      fail-fast: false
       matrix:
         os:
+          - macos-10.15
+          - macos-11.0
+          - ubuntu-16.04
           - ubuntu-18.04
           - ubuntu-20.04
-          - ubuntu-latest
-          - macos-10.15
-          - macos-latest
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -22,17 +23,14 @@ jobs:
         run: |
           wget https://dev.yorhel.nl/download/ncdu-1.15.1.tar.gz
           tar -xzvf ncdu-1.15.1.tar.gz && cd ncdu-1.15.1
-          ./configure
-          make && sudo make install
+          ./configure && make && sudo make install
 
-      - name: df info
-        run: df -h > df.txt
+      # - uses: curoky/actions/tmate@master
 
-      - name: ncdu info
-        run: >
-          ncdu
-          --exclude "/System/Volumes"
-          -o ncdu.json /
+      - name: get disk info
+        run: |
+          df -h > df.txt
+          ncdu --exclude "/System/Volumes" -o ncdu.json /
 
       - name: upload disk info
         uses: actions/upload-artifact@v2

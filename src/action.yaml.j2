@@ -1,0 +1,52 @@
+name: 'Cleanup Disk'
+description: 'Delete pre-installed sofeware in github action.'
+author: 'curoky'
+branding:
+  icon: 'trash-2'
+  color: 'gray-dark'
+inputs:
+  retain:
+    description: Retain some packages.
+    required: false
+    default: 'python,node'
+  # count_deleted_size:
+  #   description: Calculate the size of the cleanup.
+  #   required: false
+  #   default: 'false'
+  # verbose:
+  #   description: Show additional details.
+  #   required: false
+  #   default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - shell: bash
+      run: |
+        echo "-------------Disk info before cleanup----------------"
+        df -h
+        echo "-----------------------------------------------------"
+
+    {% for name, versions in packages.items() %}
+    - name: delete {{ name }}
+      shell: bash
+      run: |
+        if [[ {{ '"${{ inputs.retain }}"' }} == *"{{ name }}"* ]]; then
+          echo "ignore {{ name }}"
+        else
+          echo "delete {{ name}}"
+          {% for vname, paths in versions.items() %}
+          echo "       {{ vname }}"
+            {% for path in paths %}
+          sudo rm -rf {{ path }}
+            {% endfor %}
+          {% endfor %}
+        fi
+
+    {% endfor %}
+
+    - shell: bash
+      run: |
+        echo "-------------Disk info after cleanup----------------"
+        df -h
+        echo "-----------------------------------------------------"
