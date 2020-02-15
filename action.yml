@@ -9,6 +9,11 @@ inputs:
     description: retain some packages.
     required: false
     default: ''
+  show_stat:
+    description: show cleanup stat
+    required: false
+    default: "true"
+
 runs:
   using: 'composite'
   steps:
@@ -18,13 +23,14 @@ runs:
         sudo apt-get install python3-setuptools
         python3 -m pip install --user -r ${{ github.action_path }}/requirements.txt
 
-    - name: stats info
+    - name: stat info
       shell: bash
       run: >
         python3 ${{ github.action_path }}/src/meta-info.py --clean=1
         --meta_path=${{ github.action_path }}/src/meta/ubuntu-meta.json
         --result_path=${{ github.action_path }}/ubuntu-meta.txt
         --retain_list=${{ inputs.retain }}
+        --show_stat=${{ inputs.show_stat }}
 
     - name: cleanup disk
       shell: bash

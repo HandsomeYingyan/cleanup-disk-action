@@ -44,6 +44,7 @@ flags.mark_flag_as_required("result_path")
 
 flags.DEFINE_list("retain_list", "", "don't remove some package")
 flags.DEFINE_bool("clean", False, "clean path with meta info")
+flags.DEFINE_bool("show_stat", True, "show cleanup stat")
 
 
 def getPathSize(start_path):
@@ -77,7 +78,7 @@ def collectPathInfo(ingore_list, clean, data):
         vid_size = 0
         for p in paths:
             if os.path.isfile(p) or os.path.isdir(p):
-                file_size = getPathSize(p)
+                file_size = getPathSize(p) if FLAGS.show_stat else 0
                 vid_size += file_size
                 file_size = "{}Mb".format(file_size)
             else:
@@ -113,6 +114,7 @@ def main(_):
     with codecs.open(FLAGS.result_path, 'w', 'utf-8') as f:
         for r in results:
             r.parent = n_root
+        if FLAGS.show_stat:
         print(RenderTree(n_root).by_attr())
         print(RenderTree(n_root).by_attr(), file=f)
 

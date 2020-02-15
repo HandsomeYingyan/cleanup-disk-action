@@ -44,6 +44,16 @@ steps:
       retain: 'python,node,ruby'
 ```
 
+don't show cleanup stat
+
+```yaml
+steps:
+  - name: Cleanup Disk
+    uses: curoky/cleanup-disk-action@v1.0
+    with:
+      show_stat: false
+```
+
 ## Which packages were removed
 
 **Note**: Currently only ubuntu is supported
