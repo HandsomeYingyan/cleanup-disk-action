@@ -10,7 +10,6 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-16.04
           - ubuntu-18.04
           - ubuntu-20.04
           - ubuntu-latest
@@ -27,6 +26,8 @@ jobs:
 
       - name: Cleanup Disk
         uses: ./
+        with:
+          show_stat: false
 
       - name: After clean
         run: df -h

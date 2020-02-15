@@ -68,7 +68,7 @@ def collectPathInfo(ingore_list, clean, data):
     n_name = Node(name)
 
     if name in ingore_list and clean:
-        n_name.name = "{} (ignored)".format(n_name.name)
+        n_name.name = f"{n_name.name} (ignored)"
         return n_name
 
     all_size = 0
@@ -80,20 +80,20 @@ def collectPathInfo(ingore_list, clean, data):
             if os.path.isfile(p) or os.path.isdir(p):
                 file_size = getPathSize(p) if FLAGS.show_stat else 0
                 vid_size += file_size
-                file_size = "{}Mb".format(file_size)
+                file_size = f"{file_size}Mb"
             else:
                 file_size = "--- not found"
 
-            n_path = Node("{} [{}]".format(file_size, p), parent=n_vid)
-        n_vid.name = "{} ({}Mb)".format(n_vid.name, vid_size)
+            n_path = Node(f"{file_size} [{p}]", parent=n_vid)
+        n_vid.name = f"{n_vid.name} ({vid_size}Mb)"
         all_size += vid_size
-    n_name.name = "{} ({}Mb)".format(n_name.name, all_size)
+    n_name.name = f"{n_name.name} ({all_size}Mb)"
     return n_name
 
 
 def main(_):
     if not os.path.isfile(FLAGS.meta_path):
-        logging.fatal("file [%s] not exits", FLAGS.meta_path)
+        logging.fatal(f"file {FLAGS.meta_path} not exits")
 
     with codecs.open(FLAGS.meta_path, 'r', 'utf-8') as f:
         content = f.read()
@@ -102,9 +102,9 @@ def main(_):
 
     try:
         meta = json.loads(content)
-        logging.info("meta size: %d", len(meta))
+        logging.info(f"meta size: {len(meta)}", )
     except Exception as e:
-        logging.fatal("load file %s failed %s", FLAGS.meta_path, str(e))
+        logging.fatal(f"load file {FLAGS.meta_path} failed {e}")
 
     with multiprocessing.Pool(processes=4) as pool:
         func = partial(collectPathInfo, FLAGS.retain_list, FLAGS.clean)
@@ -115,7 +115,7 @@ def main(_):
         for r in results:
             r.parent = n_root
         if FLAGS.show_stat:
-        print(RenderTree(n_root).by_attr())
+            print(RenderTree(n_root).by_attr())
         print(RenderTree(n_root).by_attr(), file=f)
 
 
