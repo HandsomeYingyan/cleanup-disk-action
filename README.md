@@ -1,7 +1,5 @@
 # Cleanup Disk Action
 
-![unitest](https://github.com/curoky/cleanup-disk-action/workflows/test/badge.svg)
-
 **Note**: Currently only ubuntu is supported.
 
 ## Usage
@@ -9,7 +7,7 @@
 ```yaml
 steps:
   - name: Cleanup disk
-    uses: HandsomeYingyan/cleanup-disk-action@v2.0
+    uses: HandsomeYingyan/cleanup-disk-action@v3.0
 ```
 
 ### retain some packages
@@ -17,7 +15,7 @@ steps:
 ```yaml
 steps:
   - name: Cleanup Disk
-    uses: HandsomeYingyan/cleanup-disk-action@v2.0
+    uses: HandsomeYingyan/cleanup-disk-action@v3.0
     with:
       retain: 'python,node'
 ```
@@ -48,6 +46,9 @@ By default, python and node is retained, you can remove all package with set `re
 - rust
 - swift
 - vcpkg
+- r
+- jdk
+- linux header
 
 ## Effect
 
@@ -56,7 +57,7 @@ By default, python and node is retained, you can remove all package with set `re
 ```bash
 $ df -h
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sdb1        84G   61G   23G  73% /
+/dev/root        84G   51G   34G  61% /
 ```
 
 ### after clean
@@ -64,5 +65,14 @@ Filesystem      Size  Used Avail Use% Mounted on
 ```bash
 $ df -h
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sdb1        84G   20G   64G  24% /
+/dev/root        84G   20G   64G  24% /
 ```
+
+## You can use this with [easimon/maximize-build-space](https://github.com/easimon/maximize-build-space) to get more space!
+
+```bash
+$ df -h
+Filesystem                   Size  Used Avail Use% Mounted on
+/dev/mapper/buildvg-buildlv   78G   57M   78G   1% /home/runner/work/halium
+```
+
