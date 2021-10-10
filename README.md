@@ -9,7 +9,7 @@
 ```yaml
 steps:
   - name: Cleanup disk
-    uses: curoky/cleanup-disk-action@v2.0
+    uses: HandsomeYingyan/cleanup-disk-action@v2.0
 ```
 
 ### retain some packages
@@ -17,7 +17,7 @@ steps:
 ```yaml
 steps:
   - name: Cleanup Disk
-    uses: curoky/cleanup-disk-action@v2.0
+    uses: HandsomeYingyan/cleanup-disk-action@v2.0
     with:
       retain: 'python,node'
 ```
