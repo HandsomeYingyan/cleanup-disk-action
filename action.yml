@@ -1,6 +1,6 @@
 name: 'Cleanup Disk'
 description: 'Delete pre-installed sofeware in github action.'
-author: 'curoky'
+author: 'HandsomeYingyan'
 branding:
   icon: 'trash-2'
   color: 'gray-dark'
@@ -8,15 +8,7 @@ inputs:
   retain:
     description: Retain some packages.
     required: false
-    default: 'python,node'
-  # count_deleted_size:
-  #   description: Calculate the size of the cleanup.
-  #   required: false
-  #   default: 'false'
-  # verbose:
-  #   description: Show additional details.
-  #   required: false
-  #   default: 'true'
+    default: 'python,linux'
 
 runs:
   using: 'composite'
@@ -45,12 +37,7 @@ runs:
           echo "ignore ruby"
         else
           echo "delete ruby"
-          echo "       2.5.8"
-          sudo rm -rf /opt/hostedtoolcache/Ruby/2.5.8
-          echo "       2.6.6"
-          sudo rm -rf /opt/hostedtoolcache/Ruby/2.6.6
-          echo "       2.7.1"
-          sudo rm -rf /opt/hostedtoolcache/Ruby/2.7.1
+          sudo rm -rf /opt/hostedtoolcache/Ruby
         fi
 
     - name: delete pypy
@@ -60,12 +47,19 @@ runs:
           echo "ignore pypy"
         else
           echo "delete pypy"
-          echo "       2.7.13"
-          sudo rm -rf /opt/hostedtoolcache/PyPy/2.7.13
-          echo "       3.6.9"
-          sudo rm -rf /opt/hostedtoolcache/PyPy/3.6.9
+          sudo rm -rf /opt/hostedtoolcache/PyPy
         fi
 
+    - name: delete CodeQL
+      shell: bash
+      run: |
+        if [[ "${{ inputs.retain }}" == *"codeql"* ]]; then
+          echo "ignore codeql"
+        else
+          echo "delete codeql"
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+        fi
+ 
     - name: delete node
       shell: bash
       run: |
@@ -75,14 +69,7 @@ runs:
           echo "delete node"
           echo "       default"
           sudo rm -rf /usr/local/lib/node_modules
-          echo "       cached-8.17.0"
-          sudo rm -rf /opt/hostedtoolcache/node/8.17.0
-          echo "       cached-10.22.0"
-          sudo rm -rf /opt/hostedtoolcache/node/10.22.0
-          echo "       cached-12.18.3"
-          sudo rm -rf /opt/hostedtoolcache/node/12.18.3
-          echo "       cached-14.7.0"
-          sudo rm -rf /opt/hostedtoolcache/node/14.7.0
+          sudo rm -rf /opt/hostedtoolcache/node
         fi
 
     - name: delete dotnet
@@ -136,8 +123,7 @@ runs:
           echo "ignore gradle"
         else
           echo "delete gradle"
-          echo "       6.5.1"
-          sudo rm -rf /usr/share/gradle-6.5.1
+          sudo rm -rf /usr/share/gradle-*
         fi
 
     - name: delete az
@@ -149,10 +135,7 @@ runs:
           echo "delete az"
           echo "       default"
           sudo rm -rf /opt/az
-          echo "       4.5.0"
-          sudo rm -rf /usr/share/az_4.5.0
-          echo "       4.8.0"
-          sudo rm -rf /usr/share/az_4.8.0
+          sudo rm -rf /usr/share/az_*
         fi
 
     - name: delete android
@@ -173,30 +156,11 @@ runs:
           echo "ignore python"
         else
           echo "delete python"
-          echo "       sys-2.7"
-          sudo rm -rf /usr/local/lib/python2.7
-          echo "       sys-3.8"
-          sudo rm -rf /usr/local/lib/python3.8
-          echo "       cached-2.7.18"
-          sudo rm -rf /opt/hostedtoolcache/Python/2.7.18
-          echo "       cached-3.6.11"
-          sudo rm -rf /opt/hostedtoolcache/Python/3.6.11
-          echo "       cached-3.6.12"
-          sudo rm -rf /opt/hostedtoolcache/Python/3.6.12
-          echo "       cached-3.5.9"
-          sudo rm -rf /opt/hostedtoolcache/Python/3.5.9
-          echo "       cached-3.5.10"
-          sudo rm -rf /opt/hostedtoolcache/Python/3.5.10
-          echo "       cached-3.7.8"
-          sudo rm -rf /opt/hostedtoolcache/Python/3.7.8
-          echo "       cached-3.7.9"
-          sudo rm -rf /opt/hostedtoolcache/Python/3.7.9
-          echo "       cached-3.8.5"
-          sudo rm -rf /opt/hostedtoolcache/Python/3.8.5
-          echo "       cached-3.8.6"
-          sudo rm -rf /opt/hostedtoolcache/Python/3.8.6
-          echo "       cached-3.9.0"
-          sudo rm -rf /opt/hostedtoolcache/Python/3.9.0
+          echo "       sys-2.X"
+          sudo rm -rf /usr/local/lib/python2*
+          echo "       sys-3.X"
+          sudo rm -rf /usr/local/lib/python3*
+          sudo rm -rf /opt/hostedtoolcache/Python
         fi
 
     - name: delete julia
@@ -206,10 +170,7 @@ runs:
           echo "ignore julia"
         else
           echo "delete julia"
-          echo "       1.5.0"
-          sudo rm -rf /usr/local/julia1.5.0
-          echo "       1.5.3"
-          sudo rm -rf /usr/local/julia1.5.3
+          sudo rm -rf /usr/local/julia*
         fi
 
     - name: delete vcpkg
@@ -234,6 +195,17 @@ runs:
           sudo rm -rf /usr/lib/jvm
         fi
 
+    - name: delete java adopt sdk
+      shell: bash
+      run: |
+        if [[ "${{ inputs.retain }}" == *"jdk"* ]]; then
+          echo "ignore jdk"
+        else
+          echo "delete jdk"
+          echo "       default"
+          sudo rm -rf /opt/hostedtoolcache/Java_Adopt_jdk
+        fi
+
     - name: delete mono
       shell: bash
       run: |
@@ -252,18 +224,8 @@ runs:
           echo "ignore llvm"
         else
           echo "delete llvm"
-          echo "       6"
-          sudo rm -rf /usr/lib/llvm-6.0
-          sudo rm -rf /usr/include/llvm-6.0
-          echo "       8"
-          sudo rm -rf /usr/lib/llvm-8
-          sudo rm -rf /usr/include/llvm-8
-          echo "       9"
-          sudo rm -rf /usr/lib/llvm-9
-          sudo rm -rf /usr/include/llvm-9
-          echo "       10"
-          sudo rm -rf /usr/lib/llvm-10
-          sudo rm -rf /usr/include/llvm-10
+          sudo rm -rf /usr/lib/llvm-*
+          sudo rm -rf /usr/include/llvm-*
         fi
 
     - name: delete firefox
@@ -275,6 +237,28 @@ runs:
           echo "delete firefox"
           echo "       default"
           sudo rm -rf /usr/lib/firefox
+        fi
+
+    - name: delete R
+      shell: bash
+      run: |
+        if [[ "${{ inputs.retain }}" == *"r"* ]]; then
+          echo "ignore r"
+        else
+          echo "delete r"
+          echo "       default"
+          sudo rm -rf /usr/lib/R
+        fi
+
+    - name: delete Linux Headers
+      shell: bash
+      run: |
+        if [[ "${{ inputs.retain }}" == *"linux"* ]]; then
+          echo "ignore linux headers"
+        else
+          echo "delete linux headers"
+          echo "       default"
+          sudo rm -rf /usr/src/linux-*
         fi
 
     - name: delete google-cloud-sdk
@@ -306,16 +290,7 @@ runs:
           echo "ignore ghc"
         else
           echo "delete ghc"
-          echo "       8.6.5"
-          sudo rm -rf /opt/ghc/8.6.5
-          echo "       8.8.3"
-          sudo rm -rf /opt/ghc/8.8.3
-          echo "       8.8.4"
-          sudo rm -rf /opt/ghc/8.8.4
-          echo "       8.10.1"
-          sudo rm -rf /opt/ghc/8.10.1
-          echo "       8.10.2"
-          sudo rm -rf /opt/ghc/8.10.2
+          sudo rm -rf /opt/ghc
         fi
 
     - name: delete linuxbrew
